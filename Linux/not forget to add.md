@@ -1,0 +1,6 @@
+- umask
+- rsync & scp
+- install
+- rename
+- comm
+- 
