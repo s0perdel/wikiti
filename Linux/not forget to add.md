@@ -1,6 +1,9 @@
-- umask
-- rsync & scp
-- install
-- rename
-- comm
-- 
+- `umask`
+- `rsync` & `scp`
+- `install`
+- `rename`
+- `comm`, `diff`
+-  output formatting %2.p (idk how to describe)
+- mb `fmt` and this kind of commands
+- mb `bat` = cat+
+- mb `fd`= find+

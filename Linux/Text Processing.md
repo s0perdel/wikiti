@@ -379,19 +379,225 @@ Overview:
 `shuf` = `sort -R`
 
 ## `tr` (translate)
+An utility for translating, deleting or squeezing **characters**.
+*Important! It works only with stdin/stdout, no file arguments.*
+Overview:
+```BASH
+# basic translation
+echo "rat" | tr 'a' 'o' # rat > rot
+echo "hello" | tr 'hlo' 'HLO' # hello > HeLLO
+echo "car" | tr 'a-z' 'A-Z' # car > CAR
+tr '[:lower:]' '[:upper:]' # same with char classes
+
+# delete characters
+echo "car" | tr -d 'a' # car > cr
+echo "wc26" | tr -d '[:digit:]' # wc26 > wc
+tr -d '\n' # delete newlines
+
+# squeeze repeats
+echo "a    b" | tr -s ' ' # a    b > a b
+echo "aaaaa" | tr -s 'a' # aaaaa > a
+tr -s '[:space:]' # squeeze all whitespace
+
+# complement operation (apply on everything EXCEPT)
+echo "ab%%12" | tr -cd '[:alnum:]' # ab%%12 > ab12
+echo "ab%%12" | tr -c '[:alnum:]' 'X' # ab%%12 > abXX12
+
+# combined operations
+tr -ds 'aeiou' ' ' # delete vowels, squeeze spaces
+
+# ranges and sets
+tr '0-9' '9876543210' # digit mapping
+tr 'A-Za-z' 'N-ZA-Mn-za-m' # rot13 
+ ```
+Used character classes are listed [[Regular Expressions#BRE character classes|here]].
+
+## `wc` (word count)
+Overview:
+```BASH
+# basic counts
+wc file # output: lines, words, bytes, filename
+wc -l file # lines only
+wc -w file # words only
+wc -c file # bytes only
+wc -m file # characters only
+wc -L file # max line length
+
+# multiple files
+wc *.txt # for each + total
+wc -l file1 file2 # for each + total
+```
+
+## `nl` (number lines)
+Overview:
+```BASH
+# basic numering
+nl file # number non-blank lines
+nl -b a file # number ALL lines
+nl -b n file # no numbering
+
+# formatting
+nl -n ln file # left justify (default)
+nl -n rn file # right justify
+nl -n lz file # left justify with leading zeros
+nl -w 6 file # 6-char wide numbers
+nl -s " --> " file # custom separator between number and data
+
+# starting/increment
+nl -v 100 file # start at 100
+nl -i 5 file # increment by 5
+
+# RegEx selection
+nl -b p^[A-Z] file # number lines starting with caps
+nl -b p\.$ file # number lines ending with period
+
+# section (numbering from start for each section)
+nl -d '---' file # reset at delimiter
+```
+
+## `rg` (recursive grep)
+*Not installed by default.*
+Smart, 5-50x faster and recursive by default.
+It ignores `.gitignore` files and directories, use case-insensitive mode if your pattern is lowercase etc.
+Overview:
+```BASH
+# basic search
+rg pattern # recursive search
+rg -i pattern # case-insensitive
+rg -w pattern # whole word
+rg -n pattern # show line numbers (default)
+
+# file handling
+rg -t py pattern # only python files
+rg -T txt pattern # exclude .txt files
+rg -g "*.js" pattern # global pattern
+rg --hidden pattern # search hidden files
+
+# output control
+rg -l pattern # only filenames
+rg -c pattern # count per file
+rg -C 3 pattern # 3 lines context
+rg -A 2 pattern # 3 lines after
+rg -B 1 pattern # 1 line before
+
+# advanced
+rg -P pattern # PCRE2 regex
+rg -U pattern # multiline search
+rg -o pattern # only matching part
+rg -r replacement pattern # replace in output
+
+# performance
+rg --threads 4 pattern # use 4 CPU cores
+rg --nmap pattern # memory map for large files
+
+# special
+rg --json pattern # json output
+rg --type-list # show file types
+rg --files # list all searchable files
+```
+
+## `tee` (T-shaped pipe splitter)
+stdout < stdin > file
+Overview:
+```BASH
+# basic usage
+command | tee file # save and display
+command | tee -a file # append and display
+command | tee file1 file2 # multiple files
+
+# advanced usage
+command | sudo tee /etc/file # write as root
+command | tee >(grep A) >(grep B) # multiple processes
+command 2>&1 | tee log.txt # capture stderr too
+cmd1 | tee step1.txt | cmd2 | tee step2.txt # debugging
+```
+
+## `find` (file search)
+Search recursively.
+
+Find by name:
+```BASH
+find . -name "*.txt" # exact case
+find folder -iname "*.TXT" # case-insensitive
+find . -name "file[0-9].txt" # file1.txt, file2.txt, ...
+```
+
+Find by type:
+```BASH
+find . -type f # regular file
+find . -type d # directories
+find . -type l # symbolic links
+find . -type b # block devices
+find . -type c # character devices
+find . -type p # named pipes (FIFOs)
+find . -type s # sockets
+```
+
+Combine conditions:
+```BASH
+find . -name "*.py" -type f # AND (default), python files only
+find . -name "*.py" -o -name "*.sh" # OR operator
+find . ! -name "*.tmp" # NOT (everything except)
+```
+
+Time-based search:
+```BASH
+# modification time
+find . -mtime 0 # today
+find . -mtime 1 # yesterday
+find . -mtime -1 # less than 1 day ago (last 24h)
+find . -mtime +1 # more than 1 day ago
+find . -nmin -30 # modified in last 30 minutes (minutes instead of days)
+
+# access time
+find . -atime -7 # accessed in last 7 days
+find . -amin -60 # accessed in last hour
+
+# change time
+find . -ctime +30 # status changed more than 30 days ago
+
+# newer than reference
+find . -newer reference.txt # find files newer than reference.txt
+find . -newer timestamp # newer than timestamp
+```
+
+Size-based search:
+
+| Size Unit | Meaning                   |
+| --------- | ------------------------- |
+| `c`       | bytes                     |
+| `k`       | kilobytes (1024 bytes)    |
+| `M`       | megabytes                 |
+| `G`       | gigabytes                 |
+| `b`       | 512-byte blocks (default) |
+```BASH
+find . -size +1M # larger than 1MB
+find . -size -100k # smaller than 100KB
+find . -size 0 # empty files
+find . -size +100M -size -1G # between 100MB and 1GB
+```
+
+Permission & Ownership:
+```BASH
+# permissions
+find . -perm 644 # exactly rw-r--r--
+find . -perm /222 # any of these bits set (writeable by someone)
+find . -perm -644 # at least rw-r--r--
+find . -perm /u=w # writeable by owner (symbolic mode)
+
+# ownership
+find . -user $(whoami) # owned by current user
+find . -user root # owned by root
+find . -group users # belongs to users group
+find . -group $(id -gn) # belongs to currents user's group
+find . -uid 1000 # user ID 1000
+find . -gid 100 # group ID 100
+```
+
+Depth & Directory control:
 ==todo==
 
-- tr
-- wc
-- fmt
-- nl
-- diff
-- rg
-- echo
-- tee
 - xargs
-- bat
-- fd
 - find
 - paste
 - join

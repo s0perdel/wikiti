@@ -95,5 +95,24 @@ Lookarounds:
 | `(?<!foo)bar` | Match "bar" only if NOT preceded by "foo" |
 ==The differences deeply TODO==
 
+##### BRE character classes:
+
+| Class        | Description                    |
+| ------------ | ------------------------------ |
+| `[:alnum:]`  | letters and digits             |
+| `[:alpha:]`  | letters                        |
+| `[:digit:]`  | digits                         |
+| `[:space:]`  | whitespace                     |
+| `[:lower:]`  | lowercase letters              |
+| `[:upper:]`  | uppercase letters              |
+| `[:punct:]`  | punctuation                    |
+| `[:graph:]`  | visible characters (no spaces) |
+| `[:print:]`  | printable characters           |
+| `[:blank:]`  | space and tab                  |
+| `[:cntrl:]`  | control characters             |
+| `[:xdigit:]` | hexadecimal digits             |
+
+
+
 The main difference it's that BRE has only few features, and need to escape symbols to show.
 ERE is close to PCRE.
