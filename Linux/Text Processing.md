@@ -1,6 +1,5 @@
 ---
 tags:
-  - todo
 ---
 ## `cat` (concatenate)
 Simple overview:
@@ -455,7 +454,7 @@ nl -b p\.$ file # number lines ending with period
 nl -d '---' file # reset at delimiter
 ```
 
-## `rg` (recursive grep)
+## `rg` (rip grep)
 *Not installed by default.*
 Smart, 5-50x faster and recursive by default.
 It ignores `.gitignore` files and directories, use case-insensitive mode if your pattern is lowercase etc.
@@ -595,12 +594,194 @@ find . -gid 100 # group ID 100
 ```
 
 Depth & Directory control:
-==todo==
+```BASH
+# depth limiting
+find . -maxdepth 2 -name "*.txt" # only current dir and one level down
+find . -mindepth 2 -name "*.txt" # skip current directory
+find . -maxdepth 3 -mindepth 3 # exactly 3 levels deeper
 
-- xargs
-- find
-- paste
-- join
-- split
-- expand
-- unexpand
+# directory pruning
+find . -name "tmp.txt" -prune -o -name "*.txt" -print # will find every text file besides tmp.txt (-print is necessesary)
+find . \(-name ".git" -o -name ".obsidian"\) -prune -o -print # multiple prune patterns
+
+# mount points
+find . -xdev -name "*.txt" # stay on same filesystem
+find -L . -name "*.txt" # follow symlinks
+```
+
+Actions:
+```BASH
+# execute commands
+find . -name "*.tmp" -exec rm {} \; # semicolon must be escaped
+find . -name "*.jpg" -exec convert {} {}.png \+ # convert file1.jpg to file.jpg.png
+find . -name "*.sh" -exec sh -c 'echo "Script: {}"' \; # shell commands
+
+# delete files
+find . -name "*.tmp" -delete # implies -depth and delete directories as well
+
+# print options
+find . -name "*.txt" -print # default print (full path)
+find . -name "*.txt" -print0 # null-terminated (safe for xargs)
+find . -name "*.txt" -printf "%f\n" # just filenames (no path) or your format
+
+# interactive actions
+find . -name "*.tmp" -ok rm {} \; # prompt before executing
+find . -name "*.txt" -exec test -s {} \; -exec echo "Non-empth: {}" \; # execute only if command succeeds
+``` 
+
+Advanced expressions:
+```BASH
+# parentheses for grouping
+find . \(-name "*.py" -o -name "*.sh"\) -type f
+
+# combining tests
+find . -name "*.log" -size +1M -mtime +30 # old large logs
+
+# empty directories
+find . -type d -empty -delete
+```
+
+Performance optimization:
+- order matter
+- use `-prune` early
+- limit depth
+
+## `xargs` (eXtended ARGuments)
+It converts input streams into arguments for another command.
+By default is used with the pipe:
+`command | xargs another_command`
+Overview:
+```BASH
+# basic
+xargs command # input as arguments
+xargs -n1 command # one argument at a time
+xargs -n2 command # two arguments at a time
+
+# file handling
+find . -print0 | xargs -0 command # null-terminated input, safe for all filenames
+
+# placement
+# -I placement
+xargs -I {} command {} {} {} # replace {} with each input item
+find . -name "*.py" -print0 | xargs -0 -I {} cp {} {}.backup # example
+xargs -I FILE command FILE FILE # custom placeholder
+# -J placement
+xargs -J % command args % # place at specific position
+
+# batch control
+xargs -s 10000 command # stop building args before exceeding 10000 bytes
+
+# paralles execution
+xargs -P4 command # 4 parallel processes
+xargs -P0 command # as many as possible
+
+# safety
+xargs -p command # prompt before running
+xargs -t command # print commands before running
+xargs -r command # don't run if empty input
+
+# special
+xargs -d ',' command # custom delimiter
+xargs -E 'EOF' command # stop at delimiter
+```
+
+## `paste` (horizontal `cat`)
+It merges files horizontally, like column adder.
+Overview:
+```BASH
+# basic merging
+paste file1 file2 # tab separated
+paste -d ',' file1 file2 # custom separator
+
+# serial processing
+paste -s file.txt # all lines into one line
+paste -s file1 file2 # each file becomes one line
+
+# column control
+paste - - - < file # split file to 3 columns
+paste - - < file # split file to 2 columns
+
+# multiple delimiters
+paste -d ',:' file1 file2 file3 # file1,file2:file3
+
+# process substitution
+paste <(cmd1) <(cmd2) # merge command outputs
+
+# from stdin
+cat file.txt | paste - other.txt # stdin with file
+```
+
+## `join` (The SQL analog)
+Files **MUST** be sorted before on the join field.
+Overview:
+```BASH
+# INNER JOIN
+join file1 file2 # join on first field
+join -1 2 -2 1 file1 file2 # file1.field2 = file2.field1
+
+# OUTER JOINS
+join -a 1 file1 file2 # LEFT JOIN
+join -a 2 file1 file2 # RIGHT JOIN
+join -a 1 -a 2 file1 file2 # FULL JOIN
+
+# show only unpaired
+join -v 1 file1 file2 # only in file1
+join -v 2 file1 file2 # only in file2
+join -v 1 -v 2 file1 file2 # symmetric difference
+
+# delimiters
+join -t ',' file1 file2 # comma-separated
+
+# output control
+join -o 1.2,2.3 file1 file2 # select specific fields
+joint -e "N/A" file1 file2 # replace missing with N/A
+
+# case handling
+join -i file1 file2 # case-insensitive
+```
+
+## `split` (file chopper)
+It splits file into smaller pieces.
+Overview:
+```BASH
+# by lines
+split -l 100 file # 100 lines per file
+split -l 100 -d file chunk_ # split chunk_1, chunk_2, etc
+
+# by size
+split -b 100K file # 100K per file (Human-readable format)
+
+# by number of chunks
+split -n 4 file # split to 4 files
+split -n l/4 file # 4 files by line
+
+# suffix control
+split -a 3 file # 3-letter suffix (aaa, aab, ...)
+split -d file # numeric suffix (00, 01, 02, ...)
+split -a 4 -d file # 4-digit numeric (0000, 0001, ...)
+
+# output naming
+split file # create xaa, xab, ...
+split file myprefix_ # create myprefix_aa, myprefix_ab, ...
+split file "" # create aa, ab, ac, ...
+split --aditional-suffix=.txt file chunk_ # with extensions
+```
+
+## `expand` / `unexpand` (the tab-spacer)
+`expand`: converts tabs to spaces
+`unexpand`: converts spaces to tabs
+Overview:
+```BASH
+# Tabs -> Spaces
+expand file # 8-col tabs
+expand -t 4 file # 4-space tabs
+expand -t 2,6,10 file # multiple tab stops
+expand -i file # only initial tabs
+
+# Spaces -> Tabs
+unexpand file # 8-cols spaces
+unexpand -t 4 file # 4-space tabs
+unexpand -a file # all spaces (not just initial)
+unexpand -t 3,6,9 file # multiple tab stops
+
+```

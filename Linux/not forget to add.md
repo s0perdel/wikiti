@@ -3,7 +3,13 @@
 - `install`
 - `rename`
 - `comm`, `diff`
+- `jq` - json edit
+- `xmlstarlet` - xml edit
+- `csvkit` - csv edit
+- `parallel` - true parallelism
 -  output formatting %2.p (idk how to describe)
 - mb `fmt` and this kind of commands
 - mb `bat` = cat+
 - mb `fd`= find+
+- file formatting (%s, absolute path, etc)
+- `/dev/null`, `/dev/zero`, `/dev/random`
