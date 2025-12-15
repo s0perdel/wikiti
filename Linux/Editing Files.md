@@ -1,3 +1,7 @@
+---
+tags:
+  - todo
+---
 The 2 main editors is Vim and Nano.
 *Vim is not installed by default.*
 
