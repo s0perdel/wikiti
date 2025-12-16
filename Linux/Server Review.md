@@ -70,7 +70,7 @@ There are tools for that:
 ## Running Services
 
 Linux server run various services including web, database, DNS, mail servers, etc. 
-Deep diving into services will be in a separate topic, so here will be described only few tools to monitor running services.
+Deep diving into services will be in a separate topic, so here will be described only few tools to monitor running services. ==todo==
 
 | Command                | Purpose              | Example                                    |
 | ---------------------- | -------------------- | ------------------------------------------ |
