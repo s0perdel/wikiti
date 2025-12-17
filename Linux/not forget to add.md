@@ -1,4 +1,3 @@
-- `umask`
 - `rsync` & `scp`
 - `install`
 - `rename`
@@ -13,3 +12,4 @@
 - mb `fd`= find+
 - file formatting (%s, absolute path, etc)
 - `/dev/null`, `/dev/zero`, `/dev/random`
+- alias
